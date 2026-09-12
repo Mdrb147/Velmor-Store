@@ -20,6 +20,7 @@ body:not(.admin-body){padding-bottom:100px}.header-row{direction:rtl}.header-row
 
 /* A physical left wordmark, with an Arabic navigation group on the right. */
 #modal.auth-modal{width:min(460px,calc(100% - 28px));max-height:94dvh}#modal.auth-modal #modal-body{padding:22px 26px}#modal.auth-modal .modal-header{padding:16px 22px}.auth-modal .auth-intro{margin-bottom:18px}.auth-modal .auth-symbol{width:40px;height:40px;margin-bottom:10px}.auth-modal .form-tabs{margin-bottom:18px}.auth-modal .form-grid{gap:16px}
+@media(max-height:700px){#modal.auth-modal .auth-intro{display:none}#modal.auth-modal #modal-body{padding:16px 22px}#modal.auth-modal .form-tabs{margin-bottom:14px}#modal.auth-modal .auth-footer{margin-top:16px;padding-top:12px}}
 [data-theme=dark] .desktop-nav .active,[data-theme=dark] .auth-footer a,[data-theme=dark] .password-reveal,[data-theme=dark] .auth-symbol{color:var(--accent)}
 .header-row{display:grid;grid-template-columns:auto 1fr auto;direction:ltr;gap:32px;min-height:100px}
 .header-row>.wordmark{grid-column:1;grid-row:1;order:initial;margin:0;justify-self:start;font-size:1.65rem;letter-spacing:.08em}
