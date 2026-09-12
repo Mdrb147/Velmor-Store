@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="none">
+  <rect width="100" height="100" rx="22" fill="#1f0e0e"/>
+  <circle cx="50" cy="50" r="38" fill="#e5322d" fill-opacity="0.15" stroke="#e5322d" stroke-width="1.5"/>
+  <path d="M50 72 C50 72 26 55 26 39 C26 30 33 25 41 25 C46 25 49 28 50 30 C51 28 54 25 59 25 C67 25 74 30 74 39 C74 55 50 72 50 72 Z" fill="#e5322d"/>
+  <text x="50" y="47" fill="#ffffff" font-family="Arial, sans-serif" font-weight="800" font-size="11" text-anchor="middle">PDF</text>
+</svg>

@@ -1,0 +1,25 @@
+name: Deploy Storefront to Live Domain
+
+on:
+  push:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    name: Sync Website to VPS
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Deploy static files to VPS
+        uses: appleboy/scp-action@master
+        with:
+          host: 186.241.21.242
+          username: badeea
+          key: ${{ secrets.VPS_SSH_KEY }}
+          source: "index.html,admin.html,velmor.jpg,robots.txt,sitemap.xml,assets/**"
+          target: "/opt/velmor-store/bot/site"
+          strip_components: 0
+          overwrite: true

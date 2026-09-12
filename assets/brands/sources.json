@@ -1,0 +1,103 @@
+[
+  {
+    "brand": "chatgpt",
+    "page": "https://help.openai.com/en/articles/7905742-what-does-the-official-chatgpt-ios-app-icon-look-like",
+    "url": "https://images.ctfassets.net/j22is2dtoxu1/intercom-img-d177d076c9a5453052925143/49d5d812b0a6fcc20a14faa8c629d9fb/icon-ios-1024_401x.png?fm=webp&q=80&w=1024",
+    "reuse": "Official brand asset. No broad commercial reuse licence identified; brand trademark rules apply.",
+    "guidelines": "https://openai.com/brand/"
+  },
+  {
+    "brand": "capcut",
+    "page": "https://apps.apple.com/us/app/capcut-photo-video-editor/id1500855883?uo=4",
+    "url": "https://is1-ssl.mzstatic.com/image/thumb/Purple211/v4/84/54/a1/8454a15f-5543-6c27-e18e-bf31712c9410/AppIcon-0-0-1x_U007emarketing-0-8-0-85-220.png/512x512bb.png",
+    "reuse": "Official brand asset. No broad commercial reuse licence identified; brand trademark rules apply.",
+    "publisher": "BYTEDANCE PTE. LTD. via Apple App Store"
+  },
+  {
+    "brand": "canva",
+    "page": "https://apps.apple.com/us/app/canva-ai-photo-video-editor/id897446215?uo=4",
+    "url": "https://is1-ssl.mzstatic.com/image/thumb/Purple221/v4/78/26/b6/7826b612-9973-e381-1b11-f7fe8ec24f4e/AppIcon-0-0-1x_U007epad-0-11-0-85-220.png/512x512bb.png",
+    "reuse": "Official brand asset. No broad commercial reuse licence identified; brand trademark rules apply.",
+    "guidelines": "https://canvacreative.team/brand",
+    "publisher": "Canva Pty Ltd via Apple App Store"
+  },
+  {
+    "brand": "microsoft-365",
+    "page": "https://www.microsoft.com/en-us/licensing",
+    "url": "https://cdn-dynmedia-1.microsoft.com/is/image/microsoftcorp/365_Logo?fmt=png-alpha",
+    "reuse": "Microsoft brand assets are proprietary. Microsoft trademark guidelines require an express licence for logos and product icons; no licence is conferred by download.",
+    "guidelines": "https://www.microsoft.com/en-us/legal/intellectualproperty/trademarks"
+  },
+  {
+    "brand": "outlook",
+    "page": "https://www.microsoft.com/en-us/microsoft-365",
+    "url": "https://res.cdn.office.net/files/fabric-cdn-prod_20221209.001/assets/brand-icons/product/svg/outlook_48x1.svg",
+    "reuse": "Microsoft brand assets are proprietary. Microsoft trademark guidelines require an express licence for logos and product icons; no licence is conferred by download.",
+    "guidelines": "https://www.microsoft.com/en-us/legal/intellectualproperty/trademarks"
+  },
+  {
+    "brand": "icloud",
+    "page": "https://www.icloud.com/",
+    "url": "https://www.icloud.com/system/icloud.com/2630Build56/favicons/default-favicon-light-180x180.png",
+    "reuse": "Official brand asset. No broad commercial reuse licence identified; brand trademark rules apply."
+  },
+  {
+    "brand": "gemini",
+    "page": "https://gemini.google.com/",
+    "url": "https://www.gstatic.com/lamda/images/gemini_sparkle_aurora_33f86dc0c0257da337c63.svg",
+    "reuse": "Official brand asset. No broad commercial reuse licence identified; brand trademark rules apply."
+  },
+  {
+    "brand": "claude",
+    "page": "https://claude.ai/",
+    "url": "https://claude.ai/images/claude_app_icon.png",
+    "reuse": "Official brand asset. No broad commercial reuse licence identified; brand trademark rules apply."
+  },
+  {
+    "brand": "lovable",
+    "page": "https://lovablebrand.lovable.app/",
+    "url": "https://lovablebrand.lovable.app/logos/logomark-color.svg",
+    "reuse": "Official brand asset. No broad commercial reuse licence identified; brand trademark rules apply.",
+    "guidelines": "https://lovable.dev/brand"
+  },
+  {
+    "brand": "notion",
+    "page": "https://www.notion.com/",
+    "url": "https://www.notion.com/front-static/logo-ios.png",
+    "reuse": "Official brand asset. No broad commercial reuse licence identified; brand trademark rules apply."
+  },
+  {
+    "brand": "ilovepdf",
+    "page": "https://www.ilovepdf.com/",
+    "url": "https://www.ilovepdf.com/img/app-icon.png",
+    "reuse": "Official brand asset. No broad commercial reuse licence identified; brand trademark rules apply."
+  },
+  {
+    "brand": "grammarly",
+    "page": "https://superhuman.com/media-assets",
+    "url": "https://superhuman.com/media-resources/grammarly-logo-icon-color",
+    "reuse": "Official press media download; current Grammarly icon. Trademarks remain Grammarly property; Terms of Service governs trademark policy.",
+    "guidelines": "https://superhuman.com/media-assets"
+  },
+  {
+    "brand": "windows",
+    "page": "https://www.microsoft.com/en-us/legal/intellectualproperty/trademarks",
+    "url": "https://cdn-dynmedia-1.microsoft.com/is/image/microsoftcorp/Windows_logo_Blue_rgb-1?fmt=png-alpha",
+    "reuse": "Microsoft brand assets are proprietary. Microsoft trademark guidelines require an express licence for logos and product icons; no licence is conferred by download.",
+    "guidelines": "https://www.microsoft.com/en-us/legal/intellectualproperty/trademarks"
+  },
+  {
+    "brand": "adobe",
+    "page": "https://www.adobe.com/ee/cc-shared/gnav",
+    "url": "https://main--federal--adobecom.aem.live/federal/assets/svgs/adobe-logo.svg",
+    "reuse": "Adobe logo is proprietary. Adobe general trademark guidelines distinguish names from logos and restrict promotional use of logos and product icons; no licence is conferred by download.",
+    "guidelines": "https://www.adobe.com/legal/permissions/trademarks.html"
+  },
+  {
+    "brand": "autodesk",
+    "page": "https://brand.autodesk.com/visual-system/logo/",
+    "url": "https://brand.autodesk.com/wp-content/uploads/2025/02/logo-04-variations-symbol-421x237%402x.png",
+    "reuse": "Autodesk-owned brand asset, black symbol on a white brand-guideline panel. Official guidance permits a standalone symbol only in special small contexts; primary logo downloads require access. No broad reuse licence identified.",
+    "guidelines": "https://brand.autodesk.com/visual-system/logo/"
+  }
+]
