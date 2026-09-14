@@ -217,32 +217,123 @@ function selectProduct(id) {
   refreshQuote();
 }
 
+function formatDeliveryPayload(payload) {
+  const str = String(payload || '').trim();
+  if (str.includes('|')) {
+    const parts = str.split('|');
+    const email = parts[0] || '';
+    const password = parts[1] || '';
+    const extra = parts.slice(2).join(' | ');
+
+    return `
+      <div class="delivery-fields-box" style="display:grid;gap:10px;margin-top:12px;">
+        <div style="background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px 16px;display:flex;align-items:center;justify-content:space-between;gap:12px;">
+          <div>
+            <span style="display:block;font-size:.75rem;color:var(--muted);margin-bottom:3px;">البريد الإلكتروني / الحساب:</span>
+            <strong style="font-size:.95rem;font-family:monospace;direction:ltr;unicode-bidi:isolate;display:inline-block;">${esc(email)}</strong>
+          </div>
+          <button type="button" class="button quiet" data-copy="${esc(email)}" style="font-size:.8rem;padding:4px 12px;min-height:34px;">📋 نسخ البريد</button>
+        </div>
+
+        ${password ? `
+          <div style="background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px 16px;display:flex;align-items:center;justify-content:space-between;gap:12px;">
+            <div>
+              <span style="display:block;font-size:.75rem;color:var(--muted);margin-bottom:3px;">كلمة المرور:</span>
+              <strong style="font-size:.95rem;font-family:monospace;direction:ltr;unicode-bidi:isolate;display:inline-block;">${esc(password)}</strong>
+            </div>
+            <button type="button" class="button quiet" data-copy="${esc(password)}" style="font-size:.8rem;padding:4px 12px;min-height:34px;">📋 نسخ كلمة المرور</button>
+          </div>
+        ` : ''}
+
+        ${extra ? `
+          <details style="background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px 14px;">
+            <summary style="cursor:pointer;color:var(--muted);font-size:.8rem;font-weight:600;">عرض الرموز والبيانات الكاملة (Tokens / Recovery)</summary>
+            <pre class="delivery-data" style="margin-top:10px;font-size:.8rem;padding:10px;">${esc(str)}</pre>
+          </details>
+        ` : ''}
+      </div>
+      <div style="display:flex;justify-content:flex-end;margin-top:12px;">
+        <button type="button" class="button secondary" data-copy-all="${esc(str)}" style="font-size:.85rem;padding:6px 14px;min-height:36px;">📋 نسخ كامل البيانات دفعة واحدة</button>
+      </div>
+    `;
+  }
+
+  return `
+    <pre class="delivery-data" style="margin-top:10px;margin-bottom:10px;">${esc(str)}</pre>
+    <div style="display:flex;justify-content:flex-end;">
+      <button type="button" class="button secondary" data-copy-all="${esc(str)}" style="font-size:.85rem;padding:6px 14px;min-height:36px;">📋 نسخ البيانات</button>
+    </div>
+  `;
+}
+
+function getStatusBadge(status) {
+  if (status === 'delivered') {
+    return {
+      title: 'تم التسليم بنجاح — حسابك جاهز الآن!',
+      color: 'var(--success)',
+      bg: '#103b2925',
+      border: '#103b2955',
+      icon: '✓'
+    };
+  }
+  if (status === 'paid' || status === 'processing') {
+    return {
+      title: 'تم تأكيد الدفع — جاري تجهيز الطلب والتسليم',
+      color: 'var(--accent-strong)',
+      bg: '#3b68f515',
+      border: '#3b68f540',
+      icon: '⏳'
+    };
+  }
+  return {
+    title: 'بانتظار مراجعة وتأكيد التحويل من الإدارة',
+    color: '#eab308',
+    bg: '#eab30815',
+    border: '#eab30840',
+    icon: '⏳'
+  };
+}
+
 function renderConfirmation() {
   const o = state.submittedOrder;
+  const badge = getStatusBadge(o.status);
   const app = $('#checkout-app');
+
   app.innerHTML = `
     <div class="checkout-card checkout-success" style="max-width:680px;margin:30px auto;">
-      <div class="checkout-success-icon">✓</div>
-      <h1 style="font-size:1.8rem;margin-bottom:10px;">تم استلام طلبك بنجاح!</h1>
-      <p style="color:var(--muted);font-size:.95rem;">بيانات طلبك مسجلة لدينا برقم فريد لمتابعة التفعيل والاستلام.</p>
+      <div class="checkout-success-icon" style="background:${badge.bg};color:${badge.color};">${badge.icon}</div>
+      <h1 style="font-size:1.8rem;margin-bottom:10px;">${o.status === 'delivered' ? 'مبروك! تم استلام وتفعيل اشتراكك' : 'تم استلام طلبك بنجاح!'}</h1>
+      <p style="color:var(--muted);font-size:.95rem;">${o.status === 'delivered' ? 'بيانات حسابك جاهزة بالأسفل للاستخدام المباشر.' : 'بيانات طلبك مسجلة لدينا برقم فريد لمتابعة التفعيل والاستلام.'}</p>
       <div class="checkout-order-id">${esc(o.id)}</div>
       
-      <div class="checkout-reassurance" style="text-align:right;margin-bottom:24px;">
-        <svg viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
-        <span>حالة الطلب الآن: <b>${esc(o.status === 'paid' ? 'تم تأكيد الدفع وجاري التجهيز' : 'بانتظار مراجعة التحويل')}</b></span>
+      <div class="checkout-reassurance" style="text-align:right;margin-bottom:24px;background:${badge.bg};border:1px solid ${badge.border};color:${badge.color};">
+        <span style="font-weight:700;font-size:1.1rem;">${badge.icon}</span>
+        <span style="font-weight:600;font-size:.95rem;">حالة الطلب: <b>${esc(badge.title)}</b></span>
       </div>
 
-      ${o.payment_instructions ? `
-        <div style="text-align:right;background:var(--raised);padding:18px;border-radius:12px;border:1px solid var(--line);margin-bottom:24px;">
-          <h3 style="font-size:1rem;margin-bottom:8px;">تعليمات التحويل المالي:</h3>
-          <div style="font-size:.9rem;line-height:1.8;white-space:pre-wrap;">${rich(o.payment_instructions)}</div>
+      ${o.deliveries && o.deliveries.length ? `
+        <div style="text-align:right;background:var(--raised);padding:22px;border-radius:14px;border:1px solid var(--line);margin-bottom:24px;">
+          <h3 style="font-size:1.1rem;margin-bottom:6px;color:var(--success);display:flex;align-items:center;gap:8px;">
+            <span>🎉</span>
+            <span>بيانات الاشتراك والتفعيل:</span>
+          </h3>
+          <p style="color:var(--muted);font-size:.85rem;margin-bottom:14px;">
+            تم تسليم بيانات حسابك فورياً. احتفظ بهذه البيانات وسجّل الدخول بها:
+          </p>
+          ${o.deliveries.map(d => `
+            <div style="margin-bottom:16px;">
+              ${d.product_title ? `<strong style="font-size:.95rem;display:block;margin-bottom:8px;color:var(--text);">${esc(d.product_title)}</strong>` : ''}
+              ${formatDeliveryPayload(d.payload)}
+              ${d.instructions ? `<div style="margin-top:10px;font-size:.85rem;color:var(--muted);background:var(--panel);padding:10px;border-radius:8px;">${rich(d.instructions)}</div>` : ''}
+            </div>
+          `).join('')}
         </div>
       ` : ''}
 
-      ${o.deliveries && o.deliveries.length ? `
+      ${o.status !== 'delivered' && o.payment_instructions ? `
         <div style="text-align:right;background:var(--raised);padding:18px;border-radius:12px;border:1px solid var(--line);margin-bottom:24px;">
-          <h3 style="font-size:1rem;margin-bottom:8px;color:var(--success);">بيانات الاشتراك والتفعيل:</h3>
-          ${o.deliveries.map(d => `<pre class="delivery-data">${esc(d.payload)}</pre>`).join('')}
+          <h3 style="font-size:1rem;margin-bottom:8px;">تعليمات التحويل المالي:</h3>
+          <div style="font-size:.9rem;line-height:1.8;white-space:pre-wrap;">${rich(o.payment_instructions)}</div>
         </div>
       ` : ''}
 
@@ -643,6 +734,30 @@ document.addEventListener('click', e => {
   if (selectProdBtn) {
     e.preventDefault();
     selectProduct(selectProdBtn.dataset.selectProduct);
+    return;
+  }
+
+  const copyBtn = e.target.closest('[data-copy]');
+  if (copyBtn) {
+    e.preventDefault();
+    const val = copyBtn.dataset.copy;
+    navigator.clipboard.writeText(val).then(() => {
+      copyBtn.textContent = '✓ تم النسخ';
+      setTimeout(() => { copyBtn.textContent = '📋 نسخ'; }, 2000);
+      toast('تم النسخ بنجاح');
+    }).catch(() => toast('حدد النص وانسخه يدوياً'));
+    return;
+  }
+
+  const copyAllBtn = e.target.closest('[data-copy-all]');
+  if (copyAllBtn) {
+    e.preventDefault();
+    const val = copyAllBtn.dataset.copyAll;
+    navigator.clipboard.writeText(val).then(() => {
+      copyAllBtn.textContent = '✓ تم نسخ كامل البيانات';
+      setTimeout(() => { copyAllBtn.textContent = '📋 نسخ كامل البيانات دفعة واحدة'; }, 2500);
+      toast('تم نسخ جميع بيانات الحساب بنجاح!');
+    }).catch(() => toast('حدد النص وانسخه يدوياً'));
     return;
   }
 
