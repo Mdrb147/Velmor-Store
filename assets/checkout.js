@@ -4,6 +4,7 @@ const $ = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => [...r.querySelectorAll(s)];
 const esc = v => String(v ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const plain = v => { const d = new DOMParser().parseFromString(String(v ?? ''), 'text/html'); return d.body.textContent || ''; };
+
 function rich(v) {
   const d = new DOMParser().parseFromString(String(v ?? ''), 'text/html');
   const allowed = ['B', 'STRONG', 'I', 'EM', 'U', 'S', 'BR', 'P', 'UL', 'OL', 'LI', 'BLOCKQUOTE', 'CODE', 'PRE', 'A'];
@@ -88,7 +89,7 @@ function getPaymentBadge(name = '') {
   const n = name.toLowerCase();
   if (n.includes('فودافون') || n.includes('vodafone') || n.includes('كاش')) return '🇪🇬 كاش / محافظ مصر';
   if (n.includes('انستا') || n.includes('insta')) return '⚡ تحويل إنستاباي فوري';
-  if (n.includes('usdt') || n.includes('crypto') || n.includes('رقمية')) return '🪙 USDT / كريبتو';
+  if (n.includes('usdt') || n.includes('crypto') || n.includes('رقمية') || n.includes('binance') || n.includes('bybit') || n.includes('trx') || n.includes('bsc') || n.includes('sol')) return '🪙 USDT / كريبتو';
   if (n.includes('فيزا') || n.includes('visa') || n.includes('card') || n.includes('paymob') || n.includes('بنك')) return '💳 بطاقة بنكية / Paymob';
   return 'وسيلة دفع معتمدة';
 }
@@ -110,20 +111,96 @@ async function refreshQuote() {
   }
 }
 
+async function refreshQuoteOnly() {
+  if (!state.selectedProduct) return;
+  try {
+    const q = await api('/api/quote', {
+      method: 'POST',
+      body: JSON.stringify({
+        items: [{ id: state.selectedProduct.id, quantity: state.quantity }],
+        coupon: state.coupon,
+      }),
+    });
+    state.quote = q;
+    updateSummaryFigures();
+    updatePaymentCardQuotes();
+    updatePaymentGuide();
+  } catch (err) {
+    toast(err.message);
+  }
+}
+
+function updateSummaryFigures() {
+  const q = state.quote;
+  if (!q) return;
+
+  const qtyEl = $('#quantity-val');
+  if (qtyEl) qtyEl.textContent = state.quantity;
+
+  const subtotalEl = $('#summary-subtotal');
+  if (subtotalEl) subtotalEl.textContent = `${amount(q.subtotal)} ج.م`;
+
+  const discountRow = $('#summary-discount-row');
+  const discountEl = $('#summary-discount');
+  if (discountRow && discountEl) {
+    if (q.discount > 0) {
+      discountRow.style.display = 'flex';
+      discountEl.textContent = `− ${amount(q.discount)} ج.م`;
+    } else {
+      discountRow.style.display = 'none';
+    }
+  }
+
+  const totalEl = $('#summary-total');
+  if (totalEl) totalEl.innerHTML = price(q.total);
+
+  const sarEl = $('#summary-sar');
+  if (sarEl) sarEl.textContent = `~ ${amount(q.estimates?.sar || (q.total / 13.33))} ر.س`;
+
+  const usdEl = $('#summary-usd');
+  if (usdEl) usdEl.textContent = `~ $${amount(q.estimates?.usd || (q.total / 50))}`;
+
+  const egpEl = $('#summary-egp');
+  if (egpEl) egpEl.textContent = `${amount(q.total)} ج.م`;
+
+  const submitBtn = $('#checkout-submit-btn');
+  if (submitBtn) submitBtn.textContent = `تأكيد الدفع والطلب الآن — ${amount(q.total)} ج.م`;
+}
+
+function updatePaymentCardQuotes() {
+  const q = state.quote;
+  if (!q || !q.payment_amounts) return;
+
+  $$('.payment-card-item').forEach(card => {
+    const id = card.dataset.paymentId;
+    const desc = card.querySelector('.payment-card-desc');
+    if (!desc) return;
+
+    if (id === 'balance') {
+      desc.textContent = `متاح: ${amount(state.user?.balance || 0)} ج.م`;
+    } else {
+      const pQuote = q.payment_amounts[id];
+      if (pQuote) {
+        desc.innerHTML = `<b dir="ltr">${esc(pQuote.amount)} ${esc(pQuote.currency)}</b>`;
+      }
+    }
+  });
+}
+
 function renderProductSelector() {
   const app = $('#checkout-app');
   app.innerHTML = `
-    <div style="max-width:700px;margin:40px auto;text-align:center;">
+    <div style="max-width:720px;margin:40px auto;text-align:center;">
       <h1 style="font-size:1.8rem;margin-bottom:12px;">اختر الاشتراك لإتمام الشراء</h1>
       <p style="color:var(--muted);margin-bottom:28px;">اختر المنتج الرقمي الذي تود الاشتراك به للمتابعة لصفحة الدفع مباشرة.</p>
       <div class="product-grid" style="grid-template-columns:repeat(auto-fit,minmax(220px,1fr));">
         ${state.products.filter(p => !p.is_sold_out).map(p => `
-          <div class="product-card" style="cursor:pointer;padding:18px;text-align:center;" onclick="selectProduct(${p.id})">
+          <div class="product-card" style="cursor:pointer;padding:18px;text-align:center;" data-select-product="${p.id}">
             <img src="${esc(p.image_url || '/assets/icons/default.svg')}" alt="" style="width:72px;height:72px;object-fit:contain;margin:0 auto 12px;">
             <h3 style="font-size:1.05rem;margin-bottom:6px;">${esc(p.name_ar || p.name_en)}</h3>
             <p style="color:var(--muted);font-size:.8rem;margin-bottom:12px;">${esc(p.delivery_label || 'تسليم سريع')}</p>
             <div>${price(p.price)}</div>
-            <button class="button primary full" style="margin-top:14px;">اختيار ومتابعة الدفع ←</button>
+            <button type="button" class="button primary full" style="margin-top:14px;" data-select-product="${p.id}">اختيار ومتابعة الدفع ←</button>
           </div>
         `).join('')}
       </div>
@@ -139,7 +216,6 @@ function selectProduct(id) {
   history.replaceState(null, '', `?product=${p.id}`);
   refreshQuote();
 }
-window.selectProduct = selectProduct;
 
 function renderConfirmation() {
   const o = state.submittedOrder;
@@ -198,14 +274,13 @@ function render() {
     state.selectedPayment = String(state.payments[0].id);
   }
 
-  const currentMethod = state.payments.find(m => String(m.id) === state.selectedPayment);
-  const paymentQuote = q.payment_amounts?.[state.selectedPayment];
-
   const app = $('#checkout-app');
   app.innerHTML = `
     <div class="checkout-grid">
       <!-- Right Col: Checkout Form -->
       <form id="standalone-checkout-form" class="checkout-form-container">
+        <input type="hidden" name="payment_method" value="${esc(state.selectedPayment)}">
+
         <!-- Step 1: Customer Info -->
         <div class="checkout-card">
           <div class="checkout-card-header">
@@ -241,14 +316,14 @@ function render() {
             <span class="checkout-step-num">2</span>
             <h2>طريقة الدفع</h2>
           </div>
-          <p style="color:var(--muted);font-size:.875rem;margin-bottom:16px;">اختر طريقة الدفع المناسبة لك. نوفر تحويلات محلية لمصر، وبطاقات، وعملات رقمية للسعودية ودول الخليج:</p>
+          <p style="color:var(--muted);font-size:.875rem;margin-bottom:16px;">اضغط على وسيلة الدفع المناسبة لك. نوفر تحويلات محلية لمصر، وبطاقات، وعملات رقمية للسعودية ودول الخليج:</p>
           
           <div class="payment-cards-grid">
             ${state.payments.map(m => {
               const selected = String(m.id) === state.selectedPayment;
               const eligible = q.payment_amounts?.[m.id]?.eligible !== false;
               return `
-                <div class="payment-card-item ${selected ? 'selected' : ''}" onclick="selectPayment('${m.id}')" role="button" tabindex="0">
+                <div class="payment-card-item ${selected ? 'selected' : ''}" data-payment-id="${esc(m.id)}" role="button" tabindex="0" aria-checked="${selected}">
                   <div class="payment-card-top">
                     <span class="payment-card-badge">${getPaymentBadge(m.name)}</span>
                     <div class="payment-check-dot"></div>
@@ -263,7 +338,7 @@ function render() {
             }).join('')}
 
             ${state.user ? `
-              <div class="payment-card-item ${state.selectedPayment === 'balance' ? 'selected' : ''}" onclick="selectPayment('balance')" role="button" tabindex="0">
+              <div class="payment-card-item ${state.selectedPayment === 'balance' ? 'selected' : ''}" data-payment-id="balance" role="button" tabindex="0" aria-checked="${state.selectedPayment === 'balance'}">
                 <div class="payment-card-top">
                   <span class="payment-card-badge">💼 رصيد المتجر</span>
                   <div class="payment-check-dot"></div>
@@ -275,33 +350,28 @@ function render() {
           </div>
 
           <!-- Dynamic Payment Guide Box -->
-          <div class="payment-guide-box" style="background:var(--raised);border:1px solid var(--line);border-radius:12px;padding:20px;margin-bottom:20px;">
+          <div id="payment-guide-box" class="payment-guide-box" style="background:var(--raised);border:1px solid var(--line);border-radius:12px;padding:20px;margin-bottom:20px;">
             <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;padding-bottom:10px;border-bottom:1px solid var(--line);">
               <strong style="font-size:.95rem;">بيانات التحويل المطلوب:</strong>
-              ${paymentQuote ? `<span style="font-size:1.1rem;font-weight:700;color:var(--accent-strong);" dir="ltr">${esc(paymentQuote.amount)} ${esc(paymentQuote.currency)}</span>` : ''}
+              <span id="payment-guide-amount" style="font-size:1.1rem;font-weight:700;color:var(--accent-strong);" dir="ltr"></span>
             </div>
             
-            <div style="font-size:.9rem;line-height:1.8;white-space:pre-wrap;">
-              ${state.selectedPayment === 'balance' 
-                ? 'سيتم خصم المبلغ مباشرة من رصيد حسابك وتأكيد طلبك فورًا.' 
-                : (rich(currentMethod?.instructions || 'اتبع بيانات التحويل وأدخل رقم العملية لتأكيد طلبك.'))}
-            </div>
+            <div id="payment-guide-content" style="font-size:.9rem;line-height:1.8;white-space:pre-wrap;"></div>
           </div>
 
-          ${state.selectedPayment !== 'balance' ? `
-            <div class="form-grid" style="margin-bottom:14px;">
-              <label>
-                رقم العملية / المرجع أو رقم الحساب المحول منه <span style="color:var(--danger)">*</span>
-                <input name="payment_ref" required maxlength="100" placeholder="مثال: رقم التحويل، أو آخر 4 أرقام من رقم محفظتك" autocomplete="off">
-                <small>يُستخدم للتأكد من وصول التحويل واعتماد الطلب فورًا.</small>
-              </label>
-              <label>
-                صورة الإيصال (اختياري لتسريع التأكيد)
-                <input type="file" name="receipt" accept="image/jpeg,image/png,image/webp">
-                <small>صورة التحويل أو لقطة الشاشة (JPG / PNG / WebP حتى 3 ميجابايت).</small>
-              </label>
-            </div>
-          ` : ''}
+          <!-- Proof / Reference inputs -->
+          <div id="payment-ref-group" class="form-grid" style="margin-bottom:14px;">
+            <label>
+              رقم العملية / المرجع أو رقم الحساب المحول منه <span style="color:var(--danger)">*</span>
+              <input name="payment_ref" id="payment-ref-input" required maxlength="100" placeholder="مثال: رقم التحويل، أو آخر 4 أرقام من رقم محفظتك" autocomplete="off">
+              <small>يُستخدم للتأكد من وصول التحويل واعتماد الطلب فوراً.</small>
+            </label>
+            <label id="payment-receipt-group">
+              صورة الإيصال (اختياري لتسريع التأكيد)
+              <input type="file" name="receipt" accept="image/jpeg,image/png,image/webp">
+              <small>صورة التحويل أو لقطة الشاشة (JPG / PNG / WebP حتى 3 ميجابايت).</small>
+            </label>
+          </div>
         </div>
 
         <!-- Step 3: Terms & Submit -->
@@ -316,7 +386,7 @@ function render() {
 
             <div class="form-error" role="alert" style="margin-top:10px;"></div>
 
-            <button type="submit" class="button primary full" style="min-height:54px;font-size:1.1rem;font-weight:600;margin-top:8px;">
+            <button type="submit" id="checkout-submit-btn" class="button primary full" style="min-height:54px;font-size:1.1rem;font-weight:600;margin-top:8px;">
               تأكيد الدفع والطلب الآن — ${amount(q.total)} ج.م
             </button>
           </div>
@@ -343,9 +413,9 @@ function render() {
             <div style="display:flex;align-items:center;justify-content:space-between;margin-top:16px;">
               <span style="font-size:.9rem;color:var(--muted);">الكمية المطلوبة:</span>
               <div class="quantity-control" style="margin-top:0;">
-                <button type="button" onclick="changeQty(-1)">−</button>
-                <span>${state.quantity}</span>
-                <button type="button" onclick="changeQty(1)">+</button>
+                <button type="button" data-qty="-1">−</button>
+                <span id="quantity-val">${state.quantity}</span>
+                <button type="button" data-qty="1">+</button>
               </div>
             </div>
           ` : ''}
@@ -353,24 +423,22 @@ function render() {
           <!-- Coupon Input -->
           <div class="form-inline" style="margin-top:18px;">
             <input type="text" id="coupon-field" value="${esc(state.coupon)}" placeholder="كود الخصم (إن وجد)" style="height:44px;font-size:.875rem;">
-            <button type="button" class="button secondary" style="min-height:44px;padding:8px 16px;" onclick="applyCoupon()">تطبيق</button>
+            <button type="button" class="button secondary" style="min-height:44px;padding:8px 16px;" data-apply-coupon>تطبيق</button>
           </div>
 
           <!-- Price Breakdown -->
           <div class="purchase-summary" style="margin-top:18px;">
             <div class="row">
               <span>قيمة الاشتراك</span>
-              <span>${amount(q.subtotal)} ج.م</span>
+              <span id="summary-subtotal">${amount(q.subtotal)} ج.م</span>
             </div>
-            ${q.discount ? `
-              <div class="row" style="color:var(--success);">
-                <span>خصم الكوبون</span>
-                <span>− ${amount(q.discount)} ج.م</span>
-              </div>
-            ` : ''}
+            <div class="row" id="summary-discount-row" style="${q.discount ? 'display:flex;' : 'display:none;'}color:var(--success);">
+              <span>خصم الكوبون</span>
+              <span id="summary-discount">− ${amount(q.discount)} ج.م</span>
+            </div>
             <div class="row" style="border-top:1px solid var(--line);padding-top:12px;font-size:1.15rem;font-weight:700;">
               <span>الإجمالي النهائي</span>
-              ${price(q.total)}
+              <span id="summary-total">${price(q.total)}</span>
             </div>
           </div>
 
@@ -380,15 +448,15 @@ function render() {
             <div class="currency-estimates">
               <div class="currency-pill highlight">
                 <span>🇸🇦 السعودية:</span>
-                <b>~ ${amount(q.estimates?.sar || (q.total / 13.33))} ر.س</b>
+                <b id="summary-sar">~ ${amount(q.estimates?.sar || (q.total / 13.33))} ر.س</b>
               </div>
               <div class="currency-pill">
                 <span>🇺🇸 الدولار:</span>
-                <b>~ $${amount(q.estimates?.usd || (q.total / 50))}</b>
+                <b id="summary-usd">~ $${amount(q.estimates?.usd || (q.total / 50))}</b>
               </div>
               <div class="currency-pill">
                 <span>🇪🇬 مصر:</span>
-                <b>${amount(q.total)} ج.م</b>
+                <b id="summary-egp">${amount(q.total)} ج.م</b>
               </div>
             </div>
           </div>
@@ -415,14 +483,59 @@ function render() {
     </div>
   `;
 
+  updatePaymentGuide();
   attachFormEvents();
 }
 
 function selectPayment(id) {
-  state.selectedPayment = id;
-  render();
+  state.selectedPayment = String(id);
+
+  $$('.payment-card-item').forEach(card => {
+    const isThis = card.dataset.paymentId === state.selectedPayment;
+    card.classList.toggle('selected', isThis);
+    card.setAttribute('aria-checked', String(isThis));
+  });
+
+  const paymentInput = $('[name=payment_method]');
+  if (paymentInput) paymentInput.value = state.selectedPayment;
+
+  updatePaymentGuide();
 }
-window.selectPayment = selectPayment;
+
+function updatePaymentGuide() {
+  const id = state.selectedPayment;
+  const isBalance = id === 'balance';
+  const method = state.payments.find(m => String(m.id) === id);
+  const paymentQuote = state.quote?.payment_amounts?.[id];
+
+  const amountEl = $('#payment-guide-amount');
+  if (amountEl) {
+    if (isBalance) {
+      amountEl.textContent = `${amount(state.quote?.total)} ج.م`;
+    } else if (paymentQuote) {
+      amountEl.textContent = `${paymentQuote.amount} ${paymentQuote.currency}`;
+    } else {
+      amountEl.textContent = '';
+    }
+  }
+
+  const contentEl = $('#payment-guide-content');
+  if (contentEl) {
+    if (isBalance) {
+      contentEl.textContent = 'سيتم خصم المبلغ مباشرة من رصيد محفظتك وتفعيل طلبك فوراً.';
+    } else {
+      contentEl.innerHTML = rich(method?.instructions || 'اتبع بيانات التحويل وأدخل رقم العملية لتأكيد طلبك.');
+    }
+  }
+
+  const refGroup = $('#payment-ref-group');
+  const receiptGroup = $('#payment-receipt-group');
+  const refInput = $('#payment-ref-input');
+
+  if (refGroup) refGroup.style.display = isBalance ? 'none' : 'block';
+  if (receiptGroup) receiptGroup.style.display = isBalance ? 'none' : 'block';
+  if (refInput) refInput.required = !isBalance;
+}
 
 function changeQty(delta) {
   const p = state.selectedProduct;
@@ -432,17 +545,16 @@ function changeQty(delta) {
   const newQty = state.quantity + delta;
   if (newQty >= min && newQty <= max) {
     state.quantity = newQty;
-    refreshQuote();
+    refreshQuoteOnly();
   }
 }
-window.changeQty = changeQty;
 
 function applyCoupon() {
   const val = $('#coupon-field')?.value.trim();
   state.coupon = val || '';
-  refreshQuote();
+  refreshQuoteOnly();
+  if (state.coupon) toast('تم تطبيق كود الخصم');
 }
-window.applyCoupon = applyCoupon;
 
 function attachFormEvents() {
   const form = $('#standalone-checkout-form');
@@ -504,6 +616,54 @@ function attachFormEvents() {
   });
 }
 
+// Global Event Delegation (CSP compliant - no inline event attributes)
+document.addEventListener('click', e => {
+  const paymentCard = e.target.closest('[data-payment-id]');
+  if (paymentCard) {
+    e.preventDefault();
+    selectPayment(paymentCard.dataset.paymentId);
+    return;
+  }
+
+  const qtyBtn = e.target.closest('[data-qty]');
+  if (qtyBtn) {
+    e.preventDefault();
+    changeQty(Number(qtyBtn.dataset.qty));
+    return;
+  }
+
+  const couponBtn = e.target.closest('[data-apply-coupon]');
+  if (couponBtn) {
+    e.preventDefault();
+    applyCoupon();
+    return;
+  }
+
+  const selectProdBtn = e.target.closest('[data-select-product]');
+  if (selectProdBtn) {
+    e.preventDefault();
+    selectProduct(selectProdBtn.dataset.selectProduct);
+    return;
+  }
+
+  const retryBtn = e.target.closest('[data-retry]');
+  if (retryBtn) {
+    e.preventDefault();
+    location.reload();
+    return;
+  }
+});
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Enter' || e.key === ' ') {
+    const paymentCard = e.target.closest('[data-payment-id]');
+    if (paymentCard) {
+      e.preventDefault();
+      selectPayment(paymentCard.dataset.paymentId);
+    }
+  }
+});
+
 async function init() {
   const yearEl = $('#year');
   if (yearEl) yearEl.textContent = new Date().getFullYear();
@@ -536,7 +696,6 @@ async function init() {
         state.quantity = p.min_quantity || 1;
       }
     } else if (state.products.length) {
-      // Default to first available product or product selector
       const available = state.products.find(x => !x.is_sold_out);
       if (available) {
         state.selectedProduct = available;
@@ -554,7 +713,7 @@ async function init() {
       <div class="empty-state" style="max-width:500px;margin:40px auto;">
         <h3>تعذر تحميل بيانات الشراء</h3>
         <p>${esc(err.message)}</p>
-        <button class="button secondary" onclick="location.reload()">إعادة المحاولة</button>
+        <button type="button" class="button secondary" data-retry>إعادة المحاولة</button>
       </div>
     `;
   }
