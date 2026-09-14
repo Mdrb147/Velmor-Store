@@ -207,6 +207,9 @@ class MockStoreHandler(http.server.SimpleHTTPRequestHandler):
         elif url_path == "/admin" or url_path == "/admin/":
             self.path = "/admin.html"
             return super().do_GET()
+        elif url_path == "/checkout" or url_path == "/checkout/":
+            self.path = "/checkout.html"
+            return super().do_GET()
         elif url_path == "/":
             self.path = "/index.html"
             return super().do_GET()
@@ -220,6 +223,7 @@ class MockStoreHandler(http.server.SimpleHTTPRequestHandler):
                 "items": [{"id": 101, "name": "ChatGPT Plus (GPT-4o)", "quantity": 1, "total": 450, "buyer_prompt": "أدخل بريدك الإلكتروني", "buyer_prompt_expects": "email"}],
                 "discount": 0,
                 "total": 450,
+                "estimates": {"sar": 33.8, "usd": 9.0},
                 "payment_amounts": {
                     1: {"amount": "450", "currency": "ج.م", "eligible": True},
                     2: {"amount": "9.2", "currency": "USDT", "eligible": True}
@@ -245,11 +249,12 @@ class MockStoreHandler(http.server.SimpleHTTPRequestHandler):
 
 if __name__ == "__main__":
     os.chdir(DIRECTORY)
+    socketserver.TCPServer.allow_reuse_address = True
     with socketserver.TCPServer(("", PORT), MockStoreHandler) as httpd:
         url = f"http://localhost:{PORT}"
         print("=" * 60)
-        print(f"🚀 VELMOR STORE Local Development Server Running!")
-        print(f"👉 Local URL: {url}")
+        print("[*] VELMOR STORE Local Development Server Running!")
+        print(f"[*] Local URL: {url}")
         print("Press Ctrl+C to stop the server.")
         print("=" * 60)
         try:
