@@ -8,8 +8,13 @@
       button.innerHTML = theme === 'dark' ? '☀ <span>نهاري</span>' : '☾ <span>ليلي</span>';
     });
   }
-  let theme = 'light';
-  try { if (localStorage.getItem('velmor_theme') === 'dark') theme = 'dark'; } catch {}
+  let theme = 'dark';
+  try {
+    const saved = localStorage.getItem('velmor_theme');
+    if (saved === 'light') theme = 'light';
+    else if (saved === 'dark') theme = 'dark';
+    else theme = 'dark';
+  } catch {}
   apply(theme);
   document.addEventListener('DOMContentLoaded', () => apply(document.documentElement.dataset.theme));
   document.addEventListener('click', event => {
